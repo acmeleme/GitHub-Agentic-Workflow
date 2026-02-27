@@ -1,0 +1,46 @@
+name: Agentic Demo Request
+description: Request work for Architect → Developer → QA demo pipeline
+title: "[Agentic Demo] "
+labels:
+  - agentic-demo
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue triggers the GitHub Agentic Workflow demo when labeled `agentic-demo`.
+
+  - type: input
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What should be built or fixed?
+      placeholder: Describe the requested change
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know this is done?
+      placeholder: List measurable outcomes
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+      default: 1
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Optional context, constraints, or links

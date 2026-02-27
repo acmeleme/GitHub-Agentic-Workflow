@@ -1,0 +1,38 @@
+name: Bootstrap Demo Labels
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure required labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: "agentic-demo", color: "1D76DB", description: "Trigger agentic workflow on issue events" },
+              { name: "needs-architect", color: "5319E7", description: "Architect stage required" },
+              { name: "needs-dev", color: "0E8A16", description: "Developer stage required" },
+              { name: "needs-qa", color: "FBCA04", description: "QA stage required" }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name
+                });
+              } catch {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label
+                });
+              }
+            }

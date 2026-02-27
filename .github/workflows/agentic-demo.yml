@@ -1,0 +1,300 @@
+name: GitHub Agentic Workflow Demo
+
+on:
+  issues:
+    types: [opened, labeled, edited]
+  workflow_dispatch:
+    inputs:
+      feature_summary:
+        description: Feature or bug request to run through Architect → Developer → QA
+        required: true
+        type: string
+      priority:
+        description: Priority for the run
+        required: true
+        default: medium
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+      issue_number:
+        description: Optional issue number to attach updates to
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  intake:
+    name: Intake
+    runs-on: ubuntu-latest
+    outputs:
+      run_demo: ${{ steps.intake.outputs.run_demo }}
+      request_text: ${{ steps.intake.outputs.request_text }}
+      source_ref: ${{ steps.intake.outputs.source_ref }}
+      tracking_id: ${{ steps.intake.outputs.tracking_id }}
+      issue_number: ${{ steps.intake.outputs.issue_number }}
+      priority: ${{ steps.intake.outputs.priority }}
+    steps:
+      - id: intake
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eventName = context.eventName;
+            const issue = context.payload.issue;
+            const labels = issue?.labels?.map(l => l.name) || [];
+            const issueNumberFromEvent = issue?.number ? String(issue.number) : "";
+            const issueNumberFromInput = core.getInput("issue_number");
+            const issueNumber = issueNumberFromInput || issueNumberFromEvent;
+
+            const runFromIssue = eventName === "issues" && labels.includes("agentic-demo");
+            const runFromManual = eventName === "workflow_dispatch";
+            const runDemo = runFromIssue || runFromManual;
+
+            const issueTitle = issue?.title || "";
+            const issueBody = issue?.body || "";
+            const requestFromIssue = [issueTitle, issueBody].filter(Boolean).join("\n\n").trim();
+            const requestFromManual = core.getInput("feature_summary");
+            const requestText = (requestFromManual || requestFromIssue || "No request details provided").trim();
+            const priority = core.getInput("priority") || "medium";
+
+            const sourceRef = issueNumber ? `issue#${issueNumber}` : "manual";
+            const trackingId = `AGD-${context.runId}-${Date.now()}`;
+
+            core.setOutput("run_demo", String(runDemo));
+            core.setOutput("request_text", requestText);
+            core.setOutput("source_ref", sourceRef);
+            core.setOutput("tracking_id", trackingId);
+            core.setOutput("issue_number", issueNumber);
+            core.setOutput("priority", priority);
+
+            if (runDemo && issueNumber) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: Number(issueNumber),
+                body: [
+                  `🚀 Agentic demo started`,
+                  `- Tracking: ${trackingId}`,
+                  `- Source: ${sourceRef}`,
+                  `- Priority: ${priority}`,
+                  `- Pipeline: Architect → Developer → QA`
+                ].join("\n")
+              });
+            }
+
+  architect:
+    name: Architect
+    needs: intake
+    if: needs.intake.outputs.run_demo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build architecture handoff
+        run: |
+          mkdir -p out
+          cat > out/architect-report.md << 'EOF'
+          # Architect Report
+
+          ## Tracking
+          - ID: ${{ needs.intake.outputs.tracking_id }}
+          - Source: ${{ needs.intake.outputs.source_ref }}
+          - Priority: ${{ needs.intake.outputs.priority }}
+
+          ## Normalized Request
+          ${{ needs.intake.outputs.request_text }}
+
+          ## Proposed Solution
+          - Clarify scope and non-goals from request.
+          - Identify impacted modules and interfaces.
+          - Define acceptance criteria with observable outcomes.
+
+          ## Task Breakdown
+          1. Create or update implementation files.
+          2. Add or update tests for acceptance criteria.
+          3. Update docs and usage notes.
+
+          ## Acceptance Criteria
+          - Requirements are implemented and traceable.
+          - Tests pass for changed behavior.
+          - Documentation includes what changed and how to validate.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architect-report
+          path: out/architect-report.md
+
+      - name: Post architect status
+        if: needs.intake.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(`${{ needs.intake.outputs.issue_number }}`),
+              body: [
+                `🏗️ Architect completed`,
+                `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
+                `- Artifact: architect-report`
+              ].join("\n")
+            });
+
+  developer:
+    name: Developer
+    needs: [intake, architect]
+    if: needs.intake.outputs.run_demo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: architect-report
+          path: in
+
+      - name: Build developer handoff
+        run: |
+          mkdir -p out
+          cat > out/developer-report.md << 'EOF'
+          # Developer Report
+
+          ## Tracking
+          - ID: ${{ needs.intake.outputs.tracking_id }}
+
+          ## Inputs
+          - Architect handoff: in/architect-report.md
+
+          ## Implementation Summary
+          - Planned implementation generated from architect task breakdown.
+          - Code changes are intentionally mocked in this demo workflow.
+          - In a real setup, this stage would run coding agent steps and open a PR.
+
+          ## PR Plan
+          - Branch: demo/${{ needs.intake.outputs.tracking_id }}
+          - Title: feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}
+          - Checks: lint, unit tests, integration tests
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: developer-report
+          path: out/developer-report.md
+
+      - name: Post developer status
+        if: needs.intake.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(`${{ needs.intake.outputs.issue_number }}`),
+              body: [
+                `💻 Developer completed`,
+                `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
+                `- Artifact: developer-report`
+              ].join("\n")
+            });
+
+  qa:
+    name: QA
+    needs: [intake, developer]
+    if: needs.intake.outputs.run_demo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: developer-report
+          path: in
+
+      - name: Build QA handoff
+        run: |
+          mkdir -p out
+          cat > out/qa-report.md << 'EOF'
+          # QA Report
+
+          ## Tracking
+          - ID: ${{ needs.intake.outputs.tracking_id }}
+
+          ## Verification Scope
+          - Validate acceptance criteria coverage.
+          - Validate test strategy and quality gates.
+          - Capture go/no-go recommendation.
+
+          ## Result
+          - Status: ✅ Demo Pass
+          - Findings: No blocking defects in mocked flow.
+          - Recommendation: Approve for demo merge gate.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qa-report
+          path: out/qa-report.md
+
+      - name: Post QA status
+        if: needs.intake.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(`${{ needs.intake.outputs.issue_number }}`),
+              body: [
+                `🧪 QA completed`,
+                `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
+                `- Result: Demo Pass`,
+                `- Artifact: qa-report`
+              ].join("\n")
+            });
+
+  summary:
+    name: Summary
+    needs: [intake, architect, developer, qa]
+    if: always() && needs.intake.outputs.run_demo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build summary
+        run: |
+          mkdir -p out
+          cat > out/execution-summary.md << 'EOF'
+          # Agentic Workflow Execution Summary
+
+          - Tracking: ${{ needs.intake.outputs.tracking_id }}
+          - Source: ${{ needs.intake.outputs.source_ref }}
+          - Architect: ${{ needs.architect.result }}
+          - Developer: ${{ needs.developer.result }}
+          - QA: ${{ needs.qa.result }}
+
+          ## Outcome
+          - End-to-end role flow executed.
+          - Artifacts generated for all role handoffs.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: execution-summary
+          path: out/execution-summary.md
+
+      - name: Post final summary to issue
+        if: needs.intake.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(`${{ needs.intake.outputs.issue_number }}`),
+              body: [
+                `✅ Agentic demo finished`,
+                `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
+                `- Architect: ${{ needs.architect.result }}`,
+                `- Developer: ${{ needs.developer.result }}`,
+                `- QA: ${{ needs.qa.result }}`,
+                `- Artifact: execution-summary`
+              ].join("\n")
+            });
