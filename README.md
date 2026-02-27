@@ -88,3 +88,13 @@ Expected result:
 ## Notes
 - Current implementation is a production-like orchestration demo with mocked role outputs.
 - To make roles truly autonomous, replace role report generation steps with your preferred coding/AI actions while preserving output contracts.
+
+## Troubleshooting
+- No workflow run after creating an issue:
+   - Ensure the issue has label `agentic-demo` or title starts with `[Agentic Demo]`.
+- Intake ran but Architect/Developer/QA were skipped:
+   - Check the issue comment from Intake for the skip reason.
+- Labels are missing:
+   - Run workflow **Bootstrap Demo Labels** once from the Actions tab.
+- Manual run failed to attach issue comments:
+   - Provide `issue_number` in manual trigger input if you want comments posted to an issue.
