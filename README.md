@@ -86,8 +86,8 @@ Expected result:
 - Manual trigger always runs.
 
 ## Notes
-- Current implementation is a production-like orchestration demo with mocked role outputs.
-- To make roles truly autonomous, replace role report generation steps with your preferred coding/AI actions while preserving output contracts.
+- Current implementation executes real orchestration and the Developer stage creates real code in a PR.
+- To make roles fully AI-driven, replace deterministic file generation with your preferred coding/model actions while preserving output contracts.
 
 ## Troubleshooting
 - No workflow run after creating an issue:
