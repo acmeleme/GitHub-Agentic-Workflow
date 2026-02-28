@@ -172,8 +172,9 @@ jobs:
     if: needs.intake.outputs.run_demo == 'true'
     runs-on: ubuntu-latest
     outputs:
-      pr_number: ${{ steps.create_pr.outputs.pull-request-number }}
-      pr_url: ${{ steps.create_pr.outputs.pull-request-url }}
+      pr_number: ${{ steps.pr_meta.outputs.pr_number }}
+      pr_url: ${{ steps.pr_meta.outputs.pr_url }}
+      pr_status: ${{ steps.pr_meta.outputs.pr_status }}
     steps:
       - uses: actions/checkout@v4
 
@@ -230,6 +231,7 @@ jobs:
 
       - name: Create developer PR
         id: create_pr
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -249,6 +251,24 @@ jobs:
             - generated-app/README.md
             - generated-app/.generated-run.txt
 
+      - name: Resolve PR metadata
+        id: pr_meta
+        run: |
+          branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
+          pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
+          pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
+
+          if [ -n "$pr_url" ]; then
+            pr_status="created"
+          else
+            pr_status="manual-required"
+            pr_url="https://github.com/${{ github.repository }}/pull/new/$branch_name"
+          fi
+
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "pr_status=$pr_status" >> "$GITHUB_OUTPUT"
+
       - name: Build developer handoff
         run: |
           mkdir -p out
@@ -266,8 +286,9 @@ jobs:
           - Added dependency file and app-specific README.
 
           ## Pull Request
-          - Number: ${{ steps.create_pr.outputs.pull-request-number }}
-          - URL: ${{ steps.create_pr.outputs.pull-request-url }}
+          - Number: ${{ steps.pr_meta.outputs.pr_number }}
+          - URL: ${{ steps.pr_meta.outputs.pr_url }}
+          - Status: ${{ steps.pr_meta.outputs.pr_status }}
           - Branch: demo/${{ needs.intake.outputs.tracking_id }}
           EOF
 
@@ -288,7 +309,8 @@ jobs:
               body: [
                 `💻 Developer completed`,
                 `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
-                `- PR: ${{ steps.create_pr.outputs.pull-request-url }}`,
+                `- PR: ${{ steps.pr_meta.outputs.pr_url }}`,
+                `- PR Status: ${{ steps.pr_meta.outputs.pr_status }}`,
                 `- Artifact: developer-report`
               ].join("\n")
             });
