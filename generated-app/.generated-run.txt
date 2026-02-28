@@ -1,0 +1,19 @@
+tracking_id=AGD-22510975812-1772244106825
+request=[Agentic Demo]  Jogo forca
+
+### Problem statement
+
+Criar jogo da forca em python
+
+### Acceptance criteria
+
+artefato arquitetura, codigo e teste
+
+### Priority
+
+Medium
+
+### Additional notes
+
+_No response_
+generated_at=2026-02-28T02:02:02Z
