@@ -1,0 +1,12 @@
+tracking_id=AGD-22577809387-1772457607197
+request=[Agentic Demo] Real-world issue trigger verification
+
+Problem statement: Validate issue-driven trigger in live repository.
+
+Acceptance criteria:
+- Workflow starts from issue event
+- All role jobs complete successfully
+- Artifacts and final summary are generated
+
+Priority: Medium
+generated_at=2026-03-02T13:20:24Z
