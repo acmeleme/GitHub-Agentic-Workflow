@@ -241,6 +241,11 @@ jobs:
           generated_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           EOF
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-app
+          path: generated-app
+
       - name: Create developer PR
         id: create_pr
         continue-on-error: true
@@ -263,6 +268,30 @@ jobs:
             - generated-app/README.md
             - generated-app/.generated-run.txt
 
+      - name: Fallback push generated branch
+        id: fallback_push
+        if: steps.create_pr.outcome != 'success'
+        continue-on-error: true
+        run: |
+          branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch_name"
+          git add generated-app
+
+          if git diff --cached --quiet; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
+          git push --set-upstream origin "$branch_name"
+
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
+
       - name: Resolve PR metadata
         id: pr_meta
         run: |
@@ -270,9 +299,14 @@ jobs:
           create_pr_outcome="${{ steps.create_pr.outcome }}"
           pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
           pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
+          fallback_pushed="${{ steps.fallback_push.outputs.pushed }}"
 
           if [ "$create_pr_outcome" = "success" ] && [ -n "$pr_number" ]; then
             pr_status="created"
+          elif [ "$fallback_pushed" = "true" ]; then
+            pr_status="branch-pushed-pr-manual"
+            pr_number=""
+            pr_url="https://github.com/${{ github.repository }}/pull/new/$branch_name"
           else
             pr_status="manual-required"
             pr_number=""
@@ -298,6 +332,7 @@ jobs:
           ## Implementation Summary
           - Generated a runnable Flask app with a health endpoint.
           - Added dependency file and app-specific README.
+          - Uploaded generated code as workflow artifact: generated-app.
 
           ## Pull Request
           - Number: ${{ steps.pr_meta.outputs.pr_number }}
