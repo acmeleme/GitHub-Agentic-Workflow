@@ -85,7 +85,6 @@ Expected result:
 - Issue trigger runs when:
    - `opened` or `edited` and issue has label `agentic-demo` **or** title starts with `[Agentic Demo]`.
    - `labeled` only when the label added is `agentic-demo`.
-- Fast duplicate `opened` + `labeled` events on newly created issues are auto-deduplicated.
 - Manual trigger always runs.
 
 ## Notes

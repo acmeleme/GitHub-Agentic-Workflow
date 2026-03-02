@@ -65,7 +65,7 @@ jobs:
             const isAgenticLabelEvent = action === "labeled" && labeledName === "agentic-demo";
             const issueCreatedAt = issue?.created_at ? new Date(issue.created_at).getTime() : 0;
             const issueAgeSeconds = issueCreatedAt ? Math.floor((Date.now() - issueCreatedAt) / 1000) : 999999;
-            const shouldSkipDuplicateLabelEvent = isAgenticLabelEvent && issueAgeSeconds < 45;
+            const shouldSkipDuplicateLabelEvent = false;
 
             const runFromIssue = eventName === "issues" && (
               ((action === "opened" || action === "edited") && (hasAgenticLabel || hasDemoTitlePrefix)) ||
