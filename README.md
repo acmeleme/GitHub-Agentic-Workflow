@@ -82,7 +82,10 @@ Expected result:
 - Same lifecycle runs even without creating an issue.
 
 ## Trigger Rules
-- Issue trigger runs when event is `opened`, `edited`, or `labeled` and issue has label `agentic-demo` **or** title starts with `[Agentic Demo]`.
+- Issue trigger runs when:
+   - `opened` or `edited` and issue has label `agentic-demo` **or** title starts with `[Agentic Demo]`.
+   - `labeled` only when the label added is `agentic-demo`.
+- Fast duplicate `opened` + `labeled` events on newly created issues are auto-deduplicated.
 - Manual trigger always runs.
 
 ## Notes
@@ -98,3 +101,6 @@ Expected result:
    - Run workflow **Bootstrap Demo Labels** once from the Actions tab.
 - Manual run failed to attach issue comments:
    - Provide `issue_number` in manual trigger input if you want comments posted to an issue.
+- Developer stage reports `manual-required` for PR status:
+   - Your org/repo policy may block GitHub Actions from opening PRs automatically.
+   - Use the provided `pull/new/...` URL to create the PR manually.

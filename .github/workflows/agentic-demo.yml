@@ -28,6 +28,10 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: agentic-demo-${{ github.event.issue.number || github.event.inputs.issue_number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   intake:
     name: Intake
@@ -57,13 +61,21 @@ jobs:
             const issueBody = issue?.body || "";
             const hasAgenticLabel = labels.includes("agentic-demo");
             const hasDemoTitlePrefix = issueTitle.toLowerCase().startsWith("[agentic demo]");
+            const labeledName = context.payload.label?.name || "";
+            const isAgenticLabelEvent = action === "labeled" && labeledName === "agentic-demo";
+            const issueCreatedAt = issue?.created_at ? new Date(issue.created_at).getTime() : 0;
+            const issueAgeSeconds = issueCreatedAt ? Math.floor((Date.now() - issueCreatedAt) / 1000) : 999999;
+            const shouldSkipDuplicateLabelEvent = isAgenticLabelEvent && issueAgeSeconds < 45;
 
-            const runFromIssue = eventName === "issues" && (hasAgenticLabel || hasDemoTitlePrefix);
+            const runFromIssue = eventName === "issues" && (
+              ((action === "opened" || action === "edited") && (hasAgenticLabel || hasDemoTitlePrefix)) ||
+              isAgenticLabelEvent
+            ) && !shouldSkipDuplicateLabelEvent;
             const runFromManual = eventName === "workflow_dispatch";
             const runDemo = runFromIssue || runFromManual;
             const skipReason = runDemo
               ? ""
-              : `Issue did not match demo trigger. action=${action}, has_label=${hasAgenticLabel}, title_prefix=${hasDemoTitlePrefix}`;
+              : `Issue did not match demo trigger. action=${action}, labeled_name=${labeledName}, has_label=${hasAgenticLabel}, title_prefix=${hasDemoTitlePrefix}, issue_age_seconds=${issueAgeSeconds}`;
 
             const requestFromIssue = [issueTitle, issueBody].filter(Boolean).join("\n\n").trim();
             const requestFromManual = core.getInput("feature_summary");
@@ -255,13 +267,15 @@ jobs:
         id: pr_meta
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
+          create_pr_outcome="${{ steps.create_pr.outcome }}"
           pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
           pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
 
-          if [ -n "$pr_url" ]; then
+          if [ "$create_pr_outcome" = "success" ] && [ -n "$pr_number" ]; then
             pr_status="created"
           else
             pr_status="manual-required"
+            pr_number=""
             pr_url="https://github.com/${{ github.repository }}/pull/new/$branch_name"
           fi
 
