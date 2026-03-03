@@ -1,0 +1,21 @@
+tracking_id=AGD-22623001527-1772540912436
+request=[Agentic-Demo] Criar um jogo
+
+### Problem statement
+
+Criar um jogo da forca web com 5 capitais brasileiras.
+
+### Acceptance criteria
+
+  - O jogo sorteia uma palavra entre BRASILIA, SALVADOR, RECIFE, MANAUS e CURITIBA.
+     - O usuário pode tentar letras e ver acertos/erros.
+     - O jogo indica vitória/derrota e permite reiniciar.
+
+### Priority
+
+Medium
+
+### Additional notes
+
+_No response_
+generated_at=2026-03-03T12:28:49Z
