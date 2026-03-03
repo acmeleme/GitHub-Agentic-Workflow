@@ -369,6 +369,8 @@ jobs:
 
       - name: Fallback push generated branch
         id: fallback_push
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
 
@@ -397,6 +399,7 @@ jobs:
         if: steps.fallback_push.outputs.pushed == 'true'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GH_PAT }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
