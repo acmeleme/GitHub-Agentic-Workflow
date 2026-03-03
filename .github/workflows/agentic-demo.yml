@@ -367,32 +367,8 @@ jobs:
           name: generated-app
           path: generated-app
 
-      - name: Create developer PR
-        id: create_pr
-        continue-on-error: true
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.DEMO_PR_TOKEN || secrets.GITHUB_TOKEN }}
-          commit-message: "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
-          branch: "demo/${{ needs.intake.outputs.tracking_id }}"
-          title: "feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}"
-          body: |
-            ## Agentic Developer Output
-            - Tracking: ${{ needs.intake.outputs.tracking_id }}
-            - Source: ${{ needs.intake.outputs.source_ref }}
-            - Request:
-              ${{ needs.intake.outputs.request_text }}
-
-            ## Generated Files
-            - generated-app/app.py
-            - generated-app/requirements.txt
-            - generated-app/README.md
-            - generated-app/.generated-run.txt
-
       - name: Fallback push generated branch
         id: fallback_push
-        if: steps.create_pr.outcome != 'success'
-        continue-on-error: true
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
 
@@ -408,21 +384,86 @@ jobs:
           fi
 
           git commit -m "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
-          git push --set-upstream origin "$branch_name"
-
-          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          if git push --set-upstream origin "$branch_name"; then
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Could not push fallback branch with current token permissions."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+          fi
           echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
+
+      - name: Try create developer PR
+        id: create_pr
+        if: steps.fallback_push.outputs.pushed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = `demo/${{ needs.intake.outputs.tracking_id }}`;
+            const title = `feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}`;
+            const body = [
+              `## Agentic Developer Output`,
+              `- Tracking: ${{ needs.intake.outputs.tracking_id }}`,
+              `- Source: ${{ needs.intake.outputs.source_ref }}`,
+              `- Request:`,
+              `  ${{ needs.intake.outputs.request_text }}`,
+              ``,
+              `## Generated Files`,
+              `- generated-app/app.py`,
+              `- generated-app/requirements.txt`,
+              `- generated-app/README.md`,
+              `- generated-app/.generated-run.txt`
+            ].join('\n');
+
+            core.setOutput('pr_number', '');
+            core.setOutput('pr_url', '');
+            core.setOutput('pr_created', 'false');
+
+            try {
+              const existing = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+                head: `${owner}:${branch}`,
+                base: 'main',
+                per_page: 1,
+              });
+
+              if (existing.data.length > 0) {
+                const pr = existing.data[0];
+                core.setOutput('pr_number', String(pr.number));
+                core.setOutput('pr_url', pr.html_url);
+                core.setOutput('pr_created', 'true');
+                return;
+              }
+
+              const created = await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head: branch,
+                base: 'main',
+                body,
+              });
+
+              core.setOutput('pr_number', String(created.data.number));
+              core.setOutput('pr_url', created.data.html_url);
+              core.setOutput('pr_created', 'true');
+            } catch (error) {
+              core.warning(`Automatic PR creation skipped: ${error.message}`);
+            }
 
       - name: Resolve PR metadata
         id: pr_meta
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
-          create_pr_outcome="${{ steps.create_pr.outcome }}"
-          pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
-          pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
+          pr_created="${{ steps.create_pr.outputs.pr_created }}"
+          pr_number="${{ steps.create_pr.outputs.pr_number }}"
+          pr_url="${{ steps.create_pr.outputs.pr_url }}"
           fallback_pushed="${{ steps.fallback_push.outputs.pushed }}"
 
-          if [ "$create_pr_outcome" = "success" ] && [ -n "$pr_number" ]; then
+          if [ "$pr_created" = "true" ] && [ -n "$pr_number" ]; then
             pr_status="created"
           elif [ "$fallback_pushed" = "true" ]; then
             pr_status="branch-pushed-pr-manual"
