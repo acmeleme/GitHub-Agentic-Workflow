@@ -103,3 +103,18 @@ Expected result:
 - Developer stage reports `manual-required` for PR status:
    - Your org/repo policy may block GitHub Actions from opening PRs automatically.
    - Use the provided `pull/new/...` URL to create the PR manually.
+
+# Token Configuration for PR Automation
+
+To allow the workflow to create and approve pull requests automatically, configure a Personal Access Token (PAT) com as permissões corretas:
+
+1. Gere um PAT em https://github.com/settings/personal-access-tokens
+   - Permissões necessárias: `repo`, `workflow`
+   - Defina o lifetime para no máximo **366 dias** (conforme política do ACME Labs)
+2. Adicione o token como secret no repositório:
+   - Vá em **Settings > Secrets and variables > Actions > New repository secret**
+   - Nomeie como `GH_PAT`
+   - Cole o token
+3. O workflow já está configurado para usar o secret `GH_PAT` nas etapas de push e criação de PR.
+
+Se o token não seguir essas regras, o workflow irá exibir avisos e não conseguirá criar PRs automaticamente.
