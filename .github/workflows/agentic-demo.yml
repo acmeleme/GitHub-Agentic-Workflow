@@ -48,6 +48,7 @@ jobs:
       - id: intake
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const eventName = context.eventName;
             const action = context.payload.action || "";
@@ -166,6 +167,7 @@ jobs:
         if: needs.intake.outputs.issue_number != ''
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -370,7 +372,7 @@ jobs:
       - name: Fallback push generated branch
         id: fallback_push
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
 
