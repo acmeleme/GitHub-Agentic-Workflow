@@ -233,7 +233,7 @@ jobs:
         continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT || github.token }}
           commit-message: "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
           branch: "demo/${{ needs.intake.outputs.tracking_id }}"
           title: "feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}"
@@ -249,6 +249,13 @@ jobs:
             - generated-app/requirements.txt
             - generated-app/README.md
             - generated-app/.generated-run.txt
+
+      - name: Restore generated-app for fallback
+        if: steps.create_pr.outcome != 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-app
+          path: generated-app
 
       - name: Fallback push generated branch
         id: fallback_push
