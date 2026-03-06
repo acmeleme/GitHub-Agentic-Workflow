@@ -119,6 +119,7 @@ jobs:
                   `- To trigger: add label \`agentic-demo\` or use title prefix \`[Agentic Demo]\`.`
                 ].join("\n")
               });
+            }
 
   architect:
     name: Architect
