@@ -261,11 +261,14 @@ jobs:
         id: fallback_push
         if: steps.create_pr.outcome != 'success'
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
         run: |
           branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git checkout -B "$branch_name"
 
           if [ -d "generated-app" ]; then
