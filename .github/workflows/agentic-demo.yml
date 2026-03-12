@@ -132,7 +132,7 @@ jobs:
       - name: Build architecture handoff
         run: |
           mkdir -p out
-          cp .github/agent-prompts/architect.md out/architect-report.md
+          cp ./.github/agent-prompts/architect.md out/architect-report.md
           # Optionally inject workflow variables if architect.md uses placeholders
           # Example (uncomment if using placeholders):
           # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/architect-report.md
@@ -312,7 +312,7 @@ jobs:
       - name: Build developer handoff
         run: |
           mkdir -p out
-          cp .github/agent-prompts/developer.md out/developer-report.md
+          cp ./.github/agent-prompts/developer.md out/developer-report.md
           # Optionally inject workflow variables if developer.md uses placeholders
           # Example (uncomment if using placeholders):
           # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/developer-report.md
@@ -357,7 +357,7 @@ jobs:
       - name: Build QA handoff
         run: |
           mkdir -p out
-          cp .github/agent-prompts/qa.md out/qa-report.md
+          cp ./.github/agent-prompts/qa.md out/qa-report.md
           # Optionally inject workflow variables if qa.md uses placeholders
           # Example (uncomment if using placeholders):
           # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/qa-report.md
