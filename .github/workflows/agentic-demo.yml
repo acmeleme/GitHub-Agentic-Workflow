@@ -134,11 +134,11 @@ jobs:
         run: |
           mkdir -p out
           cp "$GITHUB_WORKSPACE/.github/agent-prompts/architect.md" out/architect-report.md
-            # Inject workflow variables if architect.md uses placeholders
-            # sed -i "s|{{tracking_id}}|${{ needs.intake.outputs.tracking_id }}|g" out/architect-report.md
-            # sed -i "s|{{source_ref}}|${{ needs.intake.outputs.source_ref }}|g" out/architect-report.md
-            # sed -i "s|{{priority}}|${{ needs.intake.outputs.priority }}|g" out/architect-report.md
-            # sed -i "s|{{request_text}}|${{ needs.intake.outputs.request_text }}|g" out/architect-report.md
+          # Inject workflow variables if architect.md uses placeholders
+          # sed -i "s|{{tracking_id}}|${{ needs.intake.outputs.tracking_id }}|g" out/architect-report.md
+          # sed -i "s|{{source_ref}}|${{ needs.intake.outputs.source_ref }}|g" out/architect-report.md
+          # sed -i "s|{{priority}}|${{ needs.intake.outputs.priority }}|g" out/architect-report.md
+          # sed -i "s|{{request_text}}|${{ needs.intake.outputs.request_text }}|g" out/architect-report.md
 
       - name: Test architect-report content
         run: |
