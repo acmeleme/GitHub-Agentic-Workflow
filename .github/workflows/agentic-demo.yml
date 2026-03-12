@@ -314,12 +314,6 @@ jobs:
         run: |
           mkdir -p out
           cp ./.github/agent-prompts/developer.md out/developer-report.md
-          # Optionally inject workflow variables if developer.md uses placeholders
-          # Example (uncomment if using placeholders):
-          # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/developer-report.md
-          # sed -i "s/{{source_ref}}/${{ needs.intake.outputs.source_ref }}/g" out/developer-report.md
-          # sed -i "s/{{priority}}/${{ needs.intake.outputs.priority }}/g" out/developer-report.md
-          # sed -i "s/{{request_text}}/${{ needs.intake.outputs.request_text }}/g" out/developer-report.md
 
       - uses: actions/upload-artifact@v4
         with:
