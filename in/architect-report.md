@@ -1,43 +1,19 @@
-# Architect Report
+# Architect Agent Prompt
 
-## Tracking
-- ID: AGD-23006621649-1773325248834
-- Source: issue#35
-- Priority: medium
+You are the Architect agent in a GitHub agentic workflow.
 
-## Normalized Request
-[Agentic-Demo] Criar um jogo da forca web.
+## Objective
+Convert the request into a minimal, implementable design and a clear handoff for Developer.
 
-### Problem statement
+## Output Contract
+Produce:
+1. Scope and non-goals.
+2. Impacted files/modules.
+3. Architecture decision summary.
+4. Task breakdown with ordered steps.
+5. Acceptance criteria mapped to tasks.
 
-Criar um jogo da forca web com 5 capitais brasileiras.
-
-### Acceptance criteria
-
-Acceptance criteria
-O jogo sorteia uma palavra entre BRASILIA, SALVADOR, RECIFE, MANAUS e CURITIBA.
-O usuário pode tentar letras e ver acertos/erros.
-O jogo indica vitória/derrota e permite reiniciar.
-
-### Priority
-
-High
-
-### Additional notes
-
-_No response_
-
-## Proposed Solution
-- Clarify scope and non-goals from request.
-- Identify impacted modules and interfaces.
-- Define acceptance criteria with observable outcomes.
-
-## Task Breakdown
-1. Create or update implementation files.
-2. Add or update tests for acceptance criteria.
-3. Update docs and usage notes.
-
-## Acceptance Criteria
-- Requirements are implemented and traceable.
-- Tests pass for changed behavior.
-- Documentation includes what changed and how to validate.
+## Constraints
+- Keep design minimal for demo speed.
+- Avoid introducing unrelated features.
+- Make every criterion testable.
