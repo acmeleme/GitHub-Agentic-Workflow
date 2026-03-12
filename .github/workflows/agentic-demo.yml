@@ -270,6 +270,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch_name"
 
+          # Set remote URL to use GH_PAT for authentication
+          git remote set-url origin "https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git"
+
           if [ -d "generated-app" ]; then
             git add generated-app
           else
