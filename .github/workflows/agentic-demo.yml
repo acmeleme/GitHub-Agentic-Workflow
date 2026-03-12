@@ -129,6 +129,7 @@ jobs:
     if: needs.intake.outputs.run_demo == 'true'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Build architecture handoff
         run: |
           mkdir -p out
@@ -349,6 +350,7 @@ jobs:
     if: needs.intake.outputs.run_demo == 'true'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: developer-report
