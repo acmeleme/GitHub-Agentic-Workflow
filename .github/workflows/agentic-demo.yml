@@ -354,12 +354,6 @@ jobs:
         run: |
           mkdir -p out
           cp ./.github/agent-prompts/qa.md out/qa-report.md
-          # Optionally inject workflow variables if qa.md uses placeholders
-          # Example (uncomment if using placeholders):
-          # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/qa-report.md
-          # sed -i "s/{{source_ref}}/${{ needs.intake.outputs.source_ref }}/g" out/qa-report.md
-          # sed -i "s/{{priority}}/${{ needs.intake.outputs.priority }}/g" out/qa-report.md
-          # sed -i "s/{{request_text}}/${{ needs.intake.outputs.request_text }}/g" out/qa-report.md
 
       - uses: actions/upload-artifact@v4
         with:
