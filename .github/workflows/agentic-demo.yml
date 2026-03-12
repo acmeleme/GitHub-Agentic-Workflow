@@ -132,7 +132,7 @@ jobs:
       - name: Build architecture handoff
         run: |
           mkdir -p out
-          cp ./.github/agent-prompts/architect.md out/architect-report.md
+           cp "$GITHUB_WORKSPACE/.github/agent-prompts/architect.md" out/architect-report.md
           # Optionally inject workflow variables if architect.md uses placeholders
           # Example (uncomment if using placeholders):
           # sed -i "s/{{tracking_id}}/${{ needs.intake.outputs.tracking_id }}/g" out/architect-report.md
