@@ -1,5 +1,5 @@
-tracking_id=AGD-23006621649-1773325248834
-request=[Agentic-Demo] Criar um jogo da forca web.
+tracking_id=AGD-23019194781-1773342433590
+request=[Agentic-Demo] Criar um jogo da forca web 006
 
 ### Problem statement
 
@@ -7,7 +7,6 @@ Criar um jogo da forca web com 5 capitais brasileiras.
 
 ### Acceptance criteria
 
-Acceptance criteria
 O jogo sorteia uma palavra entre BRASILIA, SALVADOR, RECIFE, MANAUS e CURITIBA.
 O usuário pode tentar letras e ver acertos/erros.
 O jogo indica vitória/derrota e permite reiniciar.
@@ -19,4 +18,4 @@ High
 ### Additional notes
 
 _No response_
-generated_at=2026-03-12T14:21:09Z
+generated_at=2026-03-12T19:07:30Z
