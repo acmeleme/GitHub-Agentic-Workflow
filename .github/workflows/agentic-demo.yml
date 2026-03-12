@@ -271,6 +271,10 @@ jobs:
           git checkout -B "$branch_name"
 
           # Set remote URL to use GH_PAT for authentication
+          if [ -z "${{ secrets.GH_PAT }}" ]; then
+            echo "ERROR: GH_PAT secret is missing or not available in this workflow context."
+            exit 1
+          fi
           git remote set-url origin "https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git"
 
           if [ -d "generated-app" ]; then
@@ -286,7 +290,15 @@ jobs:
           fi
 
           git commit -m "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
-          git push --set-upstream origin "$branch_name"
+          echo "Attempting git push..."
+          git push --set-upstream origin "$branch_name" 2>&1 || {
+            echo "ERROR: git push failed. Diagnostic output:"
+            git remote -v
+            git status
+            git log --oneline -5
+            echo "Check that GH_PAT has repo scope and is valid."
+            exit 1
+          }
 
           echo "pushed=true" >> "$GITHUB_OUTPUT"
           echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
