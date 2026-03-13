@@ -227,6 +227,46 @@ jobs:
 
           node generate-code.js "${{ needs.intake.outputs.request_text }}"
 
+        - name: Create developer PR
+          id: create_pr
+          continue-on-error: true
+          uses: peter-evans/create-pull-request@v7
+          with:
+            token: ${{ secrets.GH_PAT}}
+            commit-message: "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
+            branch: "demo/${{ needs.intake.outputs.tracking_id }}"
+            title: "feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}"
+            body: |
+              ## Agentic Developer Output
+              - Tracking: ${{ needs.intake.outputs.tracking_id }}
+              - Source: ${{ needs.intake.outputs.source_ref }}
+              - Request:
+                ${{ needs.intake.outputs.request_text }}
+
+              ## Generated Files
+              - generated-app/app.py
+              - generated-app/.generated-run.txt
+
+        - name: Resolve PR metadata
+          id: pr_meta
+          run: |
+            branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
+            create_pr_outcome="${{ steps.create_pr.outcome }}"
+            pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
+            pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
+
+            if [ "$create_pr_outcome" = "success" ] && [ -n "$pr_number" ]; then
+              pr_status="created"
+            else
+              pr_status="manual-required"
+              pr_number=""
+              pr_url="https://github.com/${{ github.repository }}/pull/new/$branch_name"
+            fi
+
+            echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+            echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+            echo "pr_status=$pr_status" >> "$GITHUB_OUTPUT"
+
       - name: Create developer PR
         id: create_pr
         continue-on-error: true
@@ -313,47 +353,6 @@ jobs:
               ].join("\n")
             });
 
-      - name: Create developer PR
-        id: create_pr
-        continue-on-error: true
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GH_PAT}}
-          commit-message: "feat(agentic-demo): generated app for ${{ needs.intake.outputs.source_ref }}"
-          branch: "demo/${{ needs.intake.outputs.tracking_id }}"
-          title: "feat(agentic-demo): implement request from ${{ needs.intake.outputs.source_ref }}"
-          body: |
-            ## Agentic Developer Output
-            - Tracking: ${{ needs.intake.outputs.tracking_id }}
-            - Source: ${{ needs.intake.outputs.source_ref }}
-            - Request:
-              ${{ needs.intake.outputs.request_text }}
-
-            ## Generated Files
-            - generated-app/app.py
-            - generated-app/requirements.txt
-            - generated-app/README.md
-            - generated-app/.generated-run.txt
-
-      - name: Resolve PR metadata
-        id: pr_meta
-        run: |
-          branch_name="demo/${{ needs.intake.outputs.tracking_id }}"
-          create_pr_outcome="${{ steps.create_pr.outcome }}"
-          pr_number="${{ steps.create_pr.outputs.pull-request-number }}"
-          pr_url="${{ steps.create_pr.outputs.pull-request-url }}"
-
-          if [ "$create_pr_outcome" = "success" ] && [ -n "$pr_number" ]; then
-            pr_status="created"
-          else
-            pr_status="manual-required"
-            pr_number=""
-            pr_url="https://github.com/${{ github.repository }}/pull/new/$branch_name"
-          fi
-
-          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
-          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
-          echo "pr_status=$pr_status" >> "$GITHUB_OUTPUT"
 
       - name: Build developer handoff
         run: |
