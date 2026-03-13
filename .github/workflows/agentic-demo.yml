@@ -210,15 +210,15 @@ jobs:
         run: |
           mkdir -p generated-app
           cat > generate-code.js << 'EOF'
-          const { CopilotClient } = require('@github/copilot-sdk');
           const fs = require('fs');
 
           async function main(prompt) {
-            const client = new CopilotClient({ token: process.env.GITHUB_TOKEN });
+            const { CopilotClient } = await import('@github/copilot-sdk');
+            const client = new CopilotClient({ githubToken: process.env.GITHUB_TOKEN });
             const session = await client.createSession();
             const result = await session.sendAndWait({ prompt });
             // Save generated code
-            fs.writeFileSync('generated-app/app.py', result.code);
+            fs.writeFileSync('generated-app/app.py', result?.data?.content || '# No code generated');
             // Save metadata
             fs.writeFileSync('generated-app/.generated-run.txt', `tracking_id=${process.env.TRACKING_ID}\nrequest=${prompt}\ngenerated_at=${new Date().toISOString()}\n`);
           }
