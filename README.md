@@ -1,20 +1,12 @@
 # GitHub Agentic Workflow Demo
 
 Demo repository for a role-based GitHub workflow with three agents:
-- Architect
-- Developer
-- QA
 
 The pipeline can run from:
 1. Issue events (issue has `agentic-demo` label)
 2. Manual trigger (`workflow_dispatch`)
 
 ## Included Files
-- `.github/workflows/agentic-demo.yml` main role workflow
-- `.github/workflows/bootstrap-labels.yml` creates required labels
-- `.github/ISSUE_TEMPLATE/agentic-demo.yml` request template
-- `.github/agent-prompts/*.md` role prompt contracts
-- `DEMO_SCRIPT.md` presenter script and talk track
 
 ## Quick Start
 Follow this as if you are running GitHub Actions for the first time.
@@ -25,7 +17,6 @@ Follow this as if you are running GitHub Actions for the first time.
 3. If GitHub asks to enable workflows, click **Enable workflows**.
 
 Expected result:
-- You can see the workflow list on the left side.
 
 ### Step 2: Create required labels (one-time setup)
 1. In **Actions**, click workflow **Bootstrap Demo Labels**.
@@ -33,7 +24,6 @@ Expected result:
 3. Wait until it shows a green check mark.
 
 Expected result:
-- Labels are created: `agentic-demo`, `needs-architect`, `needs-dev`, `needs-qa`.
 
 ### Step 3: Trigger demo from an issue (recommended)
 1. Go to **Issues** tab.
@@ -44,7 +34,6 @@ Expected result:
 6. Confirm the issue has label `agentic-demo`.
 
 Expected result:
-- A new run starts in **Actions** for workflow **GitHub Agentic Workflow Demo**.
 
 ### Step 4: Watch the workflow stages
 1. Open the running workflow.
@@ -56,7 +45,6 @@ Expected result:
    5. Summary
 
 Expected result:
-- Each stage finishes with success (green check).
 
 ### Step 5: Validate outputs
 1. Open the issue you created.
@@ -69,7 +57,6 @@ Expected result:
    - `execution-summary`
 
 Expected result:
-- You can see full handoff history from Architect → Developer → QA.
 
 ### Step 6: Manual trigger (fallback option)
 If issue flow is not available, run manually:
@@ -79,28 +66,54 @@ If issue flow is not available, run manually:
 4. Click **Run workflow**.
 
 Expected result:
-- Same lifecycle runs even without creating an issue.
 
 ## Trigger Rules
-- Issue trigger runs when:
    - `opened` or `edited` and issue has label `agentic-demo` **or** title starts with `[Agentic Demo]`.
    - `labeled` only when the label added is `agentic-demo`.
-- Fast duplicate `opened` + `labeled` events on newly created issues are auto-deduplicated.
-- Manual trigger always runs.
 
 ## Notes
-- Current implementation executes real orchestration and the Developer stage creates real code in a PR.
-- To make roles fully AI-driven, replace deterministic file generation with your preferred coding/model actions while preserving output contracts.
 
 ## Troubleshooting
-- No workflow run after creating an issue:
    - Ensure the issue has label `agentic-demo` or title starts with `[Agentic Demo]`.
-- Intake ran but Architect/Developer/QA were skipped:
    - Check the issue comment from Intake for the skip reason.
-- Labels are missing:
    - Run workflow **Bootstrap Demo Labels** once from the Actions tab.
-- Manual run failed to attach issue comments:
    - Provide `issue_number` in manual trigger input if you want comments posted to an issue.
-- Developer stage reports `manual-required` for PR status:
    - Your org/repo policy may block GitHub Actions from opening PRs automatically.
    - Use the provided `pull/new/...` URL to create the PR manually.
+# GitHub Agentic Workflow Demo
+
+## Overview
+This workflow automates code generation from GitHub issues using the GitHub Copilot agent. When an issue is opened or labeled for agentic processing, the workflow extracts the request, generates code using Copilot, and creates a pull request with the generated code.
+
+## Workflow Stages
+
+1. **Intake**: Extracts the issue request and sets up tracking.
+2. **Architect**: Normalizes the request and proposes a solution.
+3. **Developer**: Uses GitHub Copilot SDK to generate code based on the issue request, commits the code, and opens a PR.
+4. **QA**: Validates the generated code and posts results.
+5. **Summary**: Posts a final execution summary to the issue.
+
+## Developer Stage Details
+- Installs Copilot SDK (`@github/copilot-sdk`).
+- Authenticates using `GITHUB_TOKEN`.
+- Calls Copilot agent with the normalized request.
+- Saves generated code to `generated-app/app.py` and metadata to `.generated-run.txt`.
+- Creates a branch and opens a PR.
+
+## Requirements
+- GitHub Copilot SDK access.
+- `GITHUB_TOKEN` secret set in repository.
+- Node.js 20+ for Developer job.
+
+## Example Issue Flow
+1. Open a new issue describing the code you want.
+2. Add the `agentic-demo` label or use the `[Agentic Demo]` prefix in the title.
+3. The workflow will:
+   - Extract your request
+   - Generate code using Copilot
+   - Open a PR with the generated code
+   - Post status updates and artifacts to the issue
+
+## References
+- [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
+- [Workflow YAML](.github/workflows/agentic-demo.yml)
