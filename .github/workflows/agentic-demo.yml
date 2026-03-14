@@ -213,9 +213,9 @@ jobs:
           const fs = require('fs');
 
           async function main(prompt) {
-            const { CopilotClient } = await import('@github/copilot-sdk');
+            const { CopilotClient, approveAll } = await import('@github/copilot-sdk');
             const client = new CopilotClient({ githubToken: process.env.GITHUB_TOKEN });
-            const session = await client.createSession();
+            const session = await client.createSession({ onPermissionRequest: approveAll });
             const result = await session.sendAndWait({ prompt });
             // Save generated code
             fs.writeFileSync('generated-app/app.py', result?.data?.content || '# No code generated');
