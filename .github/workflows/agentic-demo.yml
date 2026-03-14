@@ -202,7 +202,7 @@ jobs:
           node-version: '20'
 
       - name: Install Copilot SDK
-        run: npm install @github/copilot-sdk
+        run: npm install @github/copilot-sdk@0.1.33-preview.2 vscode-jsonrpc@8.2.1
 
       - name: Generate code with Copilot agent
         env:
