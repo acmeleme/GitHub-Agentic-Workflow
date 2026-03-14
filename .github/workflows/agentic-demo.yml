@@ -202,11 +202,21 @@ jobs:
           node-version: '20'
 
       - name: Install Copilot SDK
-        run: npm install @github/copilot-sdk@0.1.33-preview.2 vscode-jsonrpc@8.2.1
+        # Install the stable SDK release together with better-sqlite3.
+        # better-sqlite3 provides a synchronous Database class that is
+        # API-compatible with the node:sqlite built-in introduced in Node.js
+        # v22.5.0.  The polyfill at scripts/node-sqlite-polyfill.cjs wires
+        # better-sqlite3 in as a drop-in replacement so that the SDK's bundled
+        # undici SqliteCacheStore works on Node.js v20.
+        run: npm install @github/copilot-sdk@0.1.32 vscode-jsonrpc@8.2.1 better-sqlite3
 
       - name: Generate code with Copilot agent
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Load the node:sqlite polyfill in every Node.js process in the chain,
+          # including the CLI sub-processes spawned by @github/copilot-sdk.
+          # NODE_OPTIONS is inherited across child_process.spawn() calls.
+          NODE_OPTIONS: --require ${{ github.workspace }}/scripts/node-sqlite-polyfill.cjs
         run: |
           mkdir -p generated-app
           cat > generate-code.js << 'EOF'
